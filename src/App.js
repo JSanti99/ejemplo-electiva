@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { consumerFirebase } from "./context/firebaseContext";
 import { v4 } from "uuid";
 import ImageUploader from "react-images-upload";
@@ -12,6 +12,7 @@ function App({ firebase }) {
     year: "",
     foto: "",
   });
+  const [songs, setSongs] = useState([]);
   const imageKey = v4();
 
   const handleChange = (e) => {
@@ -21,6 +22,20 @@ function App({ firebase }) {
       [name]: value,
     }));
   };
+
+  useEffect(() => {
+    const songsPeticion = async () => {
+      await firebase.db
+        .collection("Songs")
+        .get()
+        .then((canciones) => {
+          canciones.forEach((cancion) => {
+            setSongs((prev) => [...prev, cancion.data()]);
+          });
+        });
+    };
+    songsPeticion();
+  }, []);
 
   const subirImagen = async (fotos) => {
     const foto = fotos[0];
@@ -115,7 +130,7 @@ function App({ firebase }) {
           </button>
         </div>
       </form>
-      {console.log(song)}
+      {console.log(songs)}
     </div>
   );
 }
