@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { consumerFirebase } from "./context/firebaseContext";
+import { v4 } from "uuid";
+import ImageUploader from "react-images-upload";
 
 function App({ firebase }) {
   const [song, setSong] = useState({
@@ -10,6 +12,7 @@ function App({ firebase }) {
     year: "",
     foto: "",
   });
+  const imageKey = v4();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -17,6 +20,30 @@ function App({ firebase }) {
       ...prev,
       [name]: value,
     }));
+  };
+
+  const subirImagen = async (fotos) => {
+    const foto = fotos[0];
+    const nombreImagen = foto.name;
+    const codigoUnico = v4();
+    const extensionImagen = nombreImagen.split(".").pop();
+    const alias = (
+      nombreImagen.split(".")[0] +
+      "_" +
+      codigoUnico +
+      "." +
+      extensionImagen
+    )
+      .replace(/\s/g, "_")
+      .toLowerCase();
+    await firebase.guardarImagen(alias, foto).then((metadata) => {
+      firebase.devolverImagenUrl(alias).then((urlImagen) => {
+        setSong((prev) => ({
+          ...prev,
+          ["foto"]: urlImagen,
+        }));
+      });
+    });
   };
 
   const subirSong = async (e) => {
@@ -73,6 +100,15 @@ function App({ firebase }) {
             name="year"
             value={song.year}
             onChange={handleChange}
+          />
+          <ImageUploader
+            withIcon={false}
+            key={imageKey}
+            buttonText="Subir imagen..."
+            singleImage={true}
+            onChange={subirImagen}
+            imgExtension={[".jpg", ".gif", ".png", ".jpeg"]}
+            maxFileSize={5242880}
           />
           <button type="button" onClick={subirSong}>
             Enviar
